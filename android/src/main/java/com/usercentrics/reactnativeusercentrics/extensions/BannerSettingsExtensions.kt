@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Color
 import androidx.annotation.ColorInt
 import com.facebook.react.bridge.ReadableMap
+import com.facebook.react.bridge.ReadableArray
 import com.usercentrics.sdk.*
 
 internal fun String.usercentricsLayoutFromEnumString(): UsercentricsLayout? {
@@ -108,30 +109,27 @@ internal fun ReadableMap.buttonLayoutFromMap(context: Context): ButtonLayout? {
 
         for (rowIndex in 0 until buttonsArray.size()) {
             val listRow = mutableListOf<ButtonSettings>()
-            val row = buttonsArray.getArray(rowIndex)
+            val row = buttonsArray?.getArray(rowIndex)
 
-            for (rowElement in 0 until row.size()) {
-                val element = row.getMap(rowElement)
-                listRow.add(element.buttonSettingsFromMap(context))
+        val rowSize = row?.size() ?: 0
+        for (rowElement in 0 until rowSize) {
+            val element = row?.getMap(rowElement)
+            if (element != null) {
+                listRow?.add(element.buttonSettingsFromMap(context))
             }
+        }
             buttonsList.add(listRow)
         }
 
-        return@let buttonsList.toList()
+        buttonsList.toList()
     } ?: listOf()
 
-    when (layout) {
-        "ROW" -> {
-            return ButtonLayout.Row(buttons.flatten())
-        }
-        "COLUMN" -> {
-            return ButtonLayout.Column(buttons.flatten())
-        }
-        "GRID" -> {
-            return ButtonLayout.Grid(buttons)
-        }
+    return when (layout) {
+        "ROW" -> ButtonLayout.Row(buttons.flatten())
+        "COLUMN" -> ButtonLayout.Column(buttons.flatten())
+        "GRID" -> ButtonLayout.Grid(buttons)
+        else -> null
     }
-    return null
 }
 
 internal fun ReadableMap.buttonSettingsFromMap(context: Context): ButtonSettings {
